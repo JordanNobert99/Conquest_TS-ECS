@@ -1,5 +1,5 @@
-import { World, Services } from './core';
-import { ComponentRegistry } from './componentRegistry';
+import { World, Services } from '../ECS/core';
+import { ComponentRegistry } from '../ECS/componentRegistry';
 import {
     InputService,
     Camera2D,
@@ -9,12 +9,12 @@ import {
     EventService,
     TimeService,
     SceneManager
-} from './services';
-import { GameLoop } from './gameLoop';
-import { GameConfig } from './config';
-import { EntityFactory } from './entityFactory';
-import { MovementSystem, RenderSystem, PlayerInputSystem } from './systems';
-import { Transform, Velocity, Sprite } from './components';
+} from '../ECS/services';
+import { GameLoop } from '../ECS/gameLoop';
+import { GameConfig } from '../ECS/config';
+import { EntityFactory } from '../Conquest/src/entityFactory';
+import { MovementSystem, RenderSystem, PlayerInputSystem } from '../ECS/systems';
+import { Transform, Velocity, Sprite } from '../ECS/components';
 
 export class Game {
     private world: World;

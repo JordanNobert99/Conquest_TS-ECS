@@ -1,5 +1,5 @@
-import { World, EntityId } from './core';
-import { Transform, Velocity, Sprite, NetworkIdentity } from './components';
+import { World, EntityId } from '../../ECS/core';
+import { Transform, Velocity, Sprite, NetworkIdentity } from '../../ECS/components';
 
 export class EntityFactory {
     constructor(private world: World) {}
