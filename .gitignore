@@ -49,3 +49,6 @@ Desktop.ini
 
 # Optional: Vite
 .vite/
+
+# Other
+adminCommand.js

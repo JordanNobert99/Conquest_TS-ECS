@@ -1,4 +1,4 @@
-import { World, Services } from '../ECS/core';
+﻿import { World, Services } from '../ECS/core';
 import { ComponentRegistry } from '../ECS/componentRegistry';
 import {
     InputService,
@@ -15,6 +15,7 @@ import { GameConfig } from '../ECS/config';
 import { EntityFactory } from '../Conquest/src/entityFactory';
 import { MovementSystem, RenderSystem, PlayerInputSystem } from '../ECS/systems';
 import { Transform, Velocity, Sprite } from '../ECS/components';
+import { LoginManager } from './loginManager';
 
 export class Game {
     private world: World;
@@ -23,6 +24,8 @@ export class Game {
     private gameLoop: GameLoop;
     private playerId: number = -1;
     private debugMode: boolean = false;
+    private loginManager: LoginManager;
+    private isGameLoaded: boolean = false;
 
     constructor() {
         // Get canvas
@@ -55,6 +58,44 @@ export class Game {
 
         // Setup debug toggle
         this.setupDebugToggle();
+
+        // Initialize login manager - game will start after login
+        this.loginManager = new LoginManager(() => this.onLoginSuccess());
+    }
+
+    private async onLoginSuccess(): Promise<void> {
+        if (!this.isGameLoaded) {
+            await this.load();
+            this.isGameLoaded = true;
+        }
+        this.start();
+
+        // Log admin status
+        if (this.loginManager.isAdmin()) {
+            console.log('🔑 Admin access granted');
+            // You can add admin-specific features here
+            this.enableAdminFeatures();
+        }
+    }
+
+    private enableAdminFeatures(): void {
+        // Add admin-specific functionality
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'F1') {
+                e.preventDefault();
+                console.log('Admin panel (to be implemented)');
+                // Show admin panel UI
+            }
+        });
+
+        // Add admin indicator to debug info
+        const debugInfo = document.getElementById('debug-info');
+        if (debugInfo) {
+            const adminItem = document.createElement('div');
+            adminItem.className = 'debug-item';
+            adminItem.innerHTML = '<span style="color: #ffd700;">⭐ ADMIN MODE</span>';
+            debugInfo.insertBefore(adminItem, debugInfo.firstChild);
+        }
     }
 
     private initializeServices(): void {
@@ -234,9 +275,7 @@ export class Game {
     }
 }
 
-// Initialize and start game
-window.addEventListener('DOMContentLoaded', async () => {
-    const game = new Game();
-    await game.load();
-    game.start();
+// Initialize game (login will show first)
+window.addEventListener('DOMContentLoaded', () => {
+    new Game();
 });

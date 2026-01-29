@@ -1,7 +1,4 @@
-import { Services } from './core';
-import { NetworkService } from './services';
-
-// INPUT SERVICE
+// INPUT
 export class InputService {
     private keys: Map<string, boolean> = new Map();
     private keysPressed: Map<string, boolean> = new Map();
@@ -79,7 +76,7 @@ export class InputService {
     }
 }
 
-// CAMERA SERVICE
+// CAMERA
 export class Camera2D {
     public x: number = 0;
     public y: number = 0;
@@ -124,7 +121,7 @@ export class Camera2D {
     }
 }
 
-// RENDER SCALING SERVICE
+// RENDER SCALING
 export class RenderScaler {
     private targetWidth: number;
     private targetHeight: number;
@@ -189,7 +186,7 @@ export class RenderScaler {
     }
 }
 
-// ASSET MANAGER SERVICE
+// ASSET MANAGER
 export class AssetManager {
     private images: Map<string, HTMLImageElement> = new Map();
     private audio: Map<string, HTMLAudioElement> = new Map();
@@ -251,7 +248,60 @@ export class AssetManager {
     }
 }
 
-// AUDIO SERVICE
+// SCENE MANAGER
+export interface Scene {
+    load?(): void;
+    unload?(): void;
+    update?(deltaTime: number): void;
+    fixedUpdate?(fixedDeltaTime: number): void;
+    draw?(context: CanvasRenderingContext2D): void;
+}
+export class SceneManager {
+    private scenes: Map<string, Scene> = new Map();
+    private currentScene: Scene | null = null;
+    private currentSceneName: string | null = null;
+
+    registerScene(name: string, scene: Scene): void {
+        this.scenes.set(name, scene);
+    }
+
+    loadScene(name: string): void {
+        const scene = this.scenes.get(name);
+        if (!scene) {
+            throw new Error(`Scene ${name} not found`);
+        }
+
+        if (this.currentScene) {
+            this.currentScene.unload?.();
+        }
+
+        this.currentScene = scene;
+        this.currentSceneName = name;
+        this.currentScene.load?.();
+    }
+
+    getCurrentScene(): Scene | null {
+        return this.currentScene;
+    }
+
+    getCurrentSceneName(): string | null {
+        return this.currentSceneName;
+    }
+
+    update(deltaTime: number): void {
+        this.currentScene?.update?.(deltaTime);
+    }
+
+    fixedUpdate(fixedDeltaTime: number): void {
+        this.currentScene?.fixedUpdate?.(fixedDeltaTime);
+    }
+
+    draw(context: CanvasRenderingContext2D): void {
+        this.currentScene?.draw?.(context);
+    }
+}
+
+// AUDIO
 export class AudioService {
     private masterVolume: number = 1;
     private musicVolume: number = 1;
@@ -307,7 +357,7 @@ export class AudioService {
     }
 }
 
-// TIME SERVICE
+// TIME
 export class TimeService {
     private serverTime: number = 0;
     private clientTime: number = 0;
@@ -329,7 +379,7 @@ export class TimeService {
     }
 }
 
-// EVENT SERVICE
+// EVENTS
 export class EventService {
     private listeners: Map<string, ((data?: any) => void)[]> = new Map();
 
@@ -362,7 +412,7 @@ export class EventService {
     }
 }
 
-// NETWORKING SERVICE
+// NETWORKING
 export class NetworkService {
     private socket: WebSocket | null = null;
     private messageHandlers: Map<string, ((data: any) => void)[]> = new Map();
@@ -467,8 +517,6 @@ export class NetworkService {
         this.sendRate = messagesPerSecond;
     }
 }
-
-// NETWORK REPLICATION SERVICE
 export class NetworkReplicationService {
     private replicatedEntities: Set<number> = new Set();
     private snapshotBuffer: Map<number, any[]> = new Map();
@@ -529,62 +577,6 @@ export class NetworkReplicationService {
         // Implement snapshot interpolation logic here
     }
 }
-
-// SCENE MANAGER SERVICE
-export interface Scene {
-    load?(): void;
-    unload?(): void;
-    update?(deltaTime: number): void;
-    fixedUpdate?(fixedDeltaTime: number): void;
-    draw?(context: CanvasRenderingContext2D): void;
-}
-
-export class SceneManager {
-    private scenes: Map<string, Scene> = new Map();
-    private currentScene: Scene | null = null;
-    private currentSceneName: string | null = null;
-
-    registerScene(name: string, scene: Scene): void {
-        this.scenes.set(name, scene);
-    }
-
-    loadScene(name: string): void {
-        const scene = this.scenes.get(name);
-        if (!scene) {
-            throw new Error(`Scene ${name} not found`);
-        }
-
-        if (this.currentScene) {
-            this.currentScene.unload?.();
-        }
-
-        this.currentScene = scene;
-        this.currentSceneName = name;
-        this.currentScene.load?.();
-    }
-
-    getCurrentScene(): Scene | null {
-        return this.currentScene;
-    }
-
-    getCurrentSceneName(): string | null {
-        return this.currentSceneName;
-    }
-
-    update(deltaTime: number): void {
-        this.currentScene?.update?.(deltaTime);
-    }
-
-    fixedUpdate(fixedDeltaTime: number): void {
-        this.currentScene?.fixedUpdate?.(fixedDeltaTime);
-    }
-
-    draw(context: CanvasRenderingContext2D): void {
-        this.currentScene?.draw?.(context);
-    }
-}
-
-// PEER-TO-PEER SERVICE (WebRTC)
 export class P2PNetworkService {
     private peerConnections: Map<string, RTCPeerConnection> = new Map();
     private dataChannels: Map<string, RTCDataChannel> = new Map();

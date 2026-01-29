@@ -6,13 +6,22 @@
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "types": [ "vite/client" ]
   },
-  "include": [ "src/**/*" ],
-  "exclude": [ "node_modules" ]
+  "include": [
+    "TS_ECS/**/*.ts",
+    "TS_ECS/**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

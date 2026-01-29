@@ -1,6 +1,6 @@
 import { Component, Serializable } from './core';
 
-// Transform Component
+// Transform
 export class Transform implements Component, Serializable {
     entityId: number = 0;
     
@@ -31,7 +31,7 @@ export class Transform implements Component, Serializable {
     }
 }
 
-// Velocity Component
+// Velocity
 export class Velocity implements Component, Serializable {
     entityId: number = 0;
     
@@ -50,7 +50,7 @@ export class Velocity implements Component, Serializable {
     }
 }
 
-// Sprite Component
+// Sprite
 export class Sprite implements Component, Serializable {
     entityId: number = 0;
     
@@ -81,7 +81,7 @@ export class Sprite implements Component, Serializable {
     }
 }
 
-// Network Identity Component
+// Network Identity
 export class NetworkIdentity implements Component, Serializable {
     entityId: number = 0;
     
@@ -104,7 +104,7 @@ export class NetworkIdentity implements Component, Serializable {
     }
 }
 
-// Collider Component (for physics/collision)
+// Collider
 export class Collider implements Component {
     entityId: number = 0;
     
@@ -116,7 +116,7 @@ export class Collider implements Component {
     ) {}
 }
 
-// Health Component
+// Health
 export class Health implements Component, Serializable {
     entityId: number = 0;
     
