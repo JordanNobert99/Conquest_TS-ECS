@@ -1,3 +1,6 @@
+// IMPORTS
+import { World } from './core';
+
 // INPUT
 export class InputService {
     private keys: Map<string, boolean> = new Map();
@@ -256,12 +259,39 @@ export interface Scene {
     fixedUpdate?(fixedDeltaTime: number): void;
     draw?(context: CanvasRenderingContext2D): void;
 }
+
+export abstract class BaseScene implements Scene {
+    protected world: World;
+    protected context: CanvasRenderingContext2D;
+    public World: World;
+
+    constructor(context: CanvasRenderingContext2D) {
+        this.world = new World();
+        this.context = context;
+        this.World = this.world;
+    }
+
+    abstract load(): void;
+    abstract unload(): void;
+
+    update(deltaTime: number): void {
+        this.world.update(deltaTime);
+    }
+
+    fixedUpdate(fixedDeltaTime: number): void {
+        this.world.fixedUpdate(fixedDeltaTime);
+    }
+
+    draw(context: CanvasRenderingContext2D): void {
+        this.world.draw(context);
+    }
+}
 export class SceneManager {
-    private scenes: Map<string, Scene> = new Map();
-    private currentScene: Scene | null = null;
+    private scenes: Map<string, BaseScene> = new Map();
+    private currentScene: BaseScene | null = null;
     private currentSceneName: string | null = null;
 
-    registerScene(name: string, scene: Scene): void {
+    registerScene(name: string, scene: BaseScene): void {
         this.scenes.set(name, scene);
     }
 
@@ -280,7 +310,7 @@ export class SceneManager {
         this.currentScene.load?.();
     }
 
-    getCurrentScene(): Scene | null {
+    getCurrentScene(): BaseScene | null {
         return this.currentScene;
     }
 

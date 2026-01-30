@@ -1,4 +1,7 @@
-﻿import { World, Services } from '../ECS/core';
+﻿// IMPORTS
+// ========================================================
+// Core ECS
+import { World, Services } from '../ECS/core';
 import { ComponentRegistry } from '../ECS/componentRegistry';
 import {
     InputService,
@@ -12,20 +15,22 @@ import {
 } from '../ECS/services';
 import { GameLoop } from '../ECS/gameLoop';
 import { GameConfig } from '../ECS/config';
-import { EntityFactory } from '../Conquest/src/entityFactory';
-import { MovementSystem, RenderSystem, PlayerInputSystem } from '../ECS/systems';
-import { Transform, Velocity, Sprite } from '../ECS/components';
 import { LoginManager } from './loginManager';
+import { MenuScene } from './src/scenes/MenuScene';
+import { GameScene } from './src/scenes/GameScene';
+import { SettingsScene } from './src/scenes/SettingsScene';
+// =======================================================
 
+// GAME CLASS
+// =======================================================
 export class Game {
-    private world: World;
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
     private gameLoop: GameLoop;
-    private playerId: number = -1;
     private debugMode: boolean = false;
     private loginManager: LoginManager;
     private isGameLoaded: boolean = false;
+    private sceneManager: SceneManager;
 
     constructor() {
         // Get canvas
@@ -40,11 +45,11 @@ export class Game {
         }
         this.context = ctx;
 
-        // Initialize world
-        this.world = new World();
-
         // Setup services
         this.initializeServices();
+
+        // Get scene manager
+        this.sceneManager = Services.get(SceneManager);
 
         // Initialize component registry
         ComponentRegistry.initialize();
@@ -73,9 +78,11 @@ export class Game {
         // Log admin status
         if (this.loginManager.isAdmin()) {
             console.log('🔑 Admin access granted');
-            // You can add admin-specific features here
             this.enableAdminFeatures();
         }
+
+        // Load menu scene
+        this.sceneManager.loadScene('menu');
     }
 
     private enableAdminFeatures(): void {
@@ -156,11 +163,8 @@ export class Game {
             updateProgress(10, 'Loading assets...');
             await this.loadAssets();
 
-            updateProgress(50, 'Creating world...');
-            await this.createGameWorld();
-
-            updateProgress(80, 'Initializing systems...');
-            this.initializeSystems();
+            updateProgress(50, 'Initializing scenes...');
+            this.initializeScenes();
 
             updateProgress(100, 'Ready!');
 
@@ -181,38 +185,15 @@ export class Game {
 
     private async loadAssets(): Promise<void> {
         const assets = Services.get(AssetManager);
-
-        // Load placeholder assets (you can replace these with real assets)
-        // For now, we'll just wait a bit to simulate loading
         await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Example: Load actual assets
-        // await assets.loadImage('player', '/assets/images/player.png');
-        // await assets.loadImage('enemy', '/assets/images/enemy.png');
-        // await assets.loadAudio('bgm', '/assets/audio/music.mp3');
-
         await assets.waitForAll();
     }
 
-    private async createGameWorld(): Promise<void> {
-        const factory = new EntityFactory(this.world);
-
-        // Create player
-        this.playerId = factory.createPlayer(400, 300);
-
-        // Create some test entities
-        for (let i = 0; i < 10; i++) {
-            const x = Math.random() * 800;
-            const y = Math.random() * 600;
-            factory.createEnemy(x, y);
-        }
-    }
-
-    private initializeSystems(): void {
-        // Add systems to world
-        this.world.addSystem(new PlayerInputSystem(this.world, this.playerId));
-        this.world.addSystem(new MovementSystem(this.world));
-        this.world.addSystem(new RenderSystem(this.world));
+    private initializeScenes(): void {
+        // Register all scenes
+        this.sceneManager.registerScene('menu', new MenuScene(this.context));
+        this.sceneManager.registerScene('game', new GameScene(this.context));
+        this.sceneManager.registerScene('settings', new SettingsScene(this.context));
     }
 
     private update(deltaTime: number): void {
@@ -220,8 +201,8 @@ export class Game {
         const input = Services.get(InputService);
         input.update();
 
-        // Update world
-        this.world.update(deltaTime);
+        // Update current scene
+        this.sceneManager.update(deltaTime);
 
         // Update debug info
         if (this.debugMode) {
@@ -230,16 +211,13 @@ export class Game {
     }
 
     private fixedUpdate(fixedDeltaTime: number): void {
-        this.world.fixedUpdate(fixedDeltaTime);
+        // Fixed update current scene
+        this.sceneManager.fixedUpdate(fixedDeltaTime);
     }
 
     private draw(): void {
-        // Clear canvas
-        this.context.fillStyle = '#1a1a2e';
-        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // Draw world
-        this.world.draw(this.context);
+        // Draw current scene
+        this.sceneManager.draw(this.context);
     }
 
     private setupDebugToggle(): void {
@@ -257,13 +235,31 @@ export class Game {
 
     private updateDebugInfo(deltaTime: number): void {
         const fps = Math.round(1 / deltaTime);
-        const entityCount = this.world.getAllEntities().length;
+        const currentScene = this.sceneManager.getCurrentSceneName();
+        const entityCount = this.sceneManager.getCurrentScene()?.World.getAllEntities().length;
+
+        if (entityCount == undefined || entityCount < 1) return;
 
         const fpsElement = document.getElementById('fps');
         const entityCountElement = document.getElementById('entityCount');
 
         if (fpsElement) fpsElement.textContent = fps.toString();
         if (entityCountElement) entityCountElement.textContent = entityCount.toString();
+
+        // Add scene name to debug info
+        let sceneElement = document.getElementById('current-scene');
+        if (!sceneElement) {
+            const debugInfo = document.getElementById('debug-info');
+            if (debugInfo) {
+                sceneElement = document.createElement('div');
+                sceneElement.className = 'debug-item';
+                sceneElement.id = 'current-scene';
+                debugInfo.appendChild(sceneElement);
+            }
+        }
+        if (sceneElement) {
+            sceneElement.innerHTML = `Scene: <span>${currentScene || 'None'}</span>`;
+        }
     }
 
     start(): void {
@@ -274,6 +270,7 @@ export class Game {
         this.gameLoop.stop();
     }
 }
+// =======================================================
 
 // Initialize game (login will show first)
 window.addEventListener('DOMContentLoaded', () => {
